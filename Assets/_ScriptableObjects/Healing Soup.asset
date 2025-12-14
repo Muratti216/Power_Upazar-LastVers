@@ -17,5 +17,5 @@ MonoBehaviour:
   cardPicture: {fileID: 1300915490701998709, guid: f89ea3c61a2ab5c468b4d26c3ce78a1f, type: 3}
   damageAmount: 0
   healAmount: 3
-  baseChance: 0
+  baseChance: 10
   preferredSeason: 0

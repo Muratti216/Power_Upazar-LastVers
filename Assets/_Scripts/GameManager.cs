@@ -19,17 +19,21 @@ public class GameManager : MonoBehaviour
     public Sprite[] monthSprites;
     public TextMeshProUGUI seasonInfoText;
 
-    // --- YENİ: Arka Plan Ayarları ---
+    private bool isGameOver = false;
+
     [Header("Background Settings")]
-    public Image backgroundDisplay; // Sahnedeki Background objesini buraya ata
-    public Sprite[] seasonBackgrounds; // 4 Mevsim arka planını buraya ata
-    // --------------------------------
+    public Image backgroundDisplay; 
+    public Sprite[] seasonBackgrounds; 
 
     private void Awake()
     {
         if (Instance != null && Instance != this) Destroy(Instance);
         else Instance = this;
     }
+
+
+
+
 
     [Header("UI Panels")]
     public GameObject winPanel;
@@ -57,7 +61,33 @@ public class GameManager : MonoBehaviour
         StartCoroutine(SetupTheDeck());
     }
 
-    // --- EKSİK OLAN FONKSİYONLAR BURADA ---
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            Application.Quit();
+        }
+    }
+
+
+    public void TriggerWin()
+    {
+        if (isGameOver) return;
+        isGameOver = true;
+
+        if (winPanel != null) winPanel.SetActive(true);
+    }
+
+    public void TriggerLose()
+    {
+        if (isGameOver) return;
+        isGameOver = true;
+
+        Debug.Log("You Lost!");
+        if (losePanel != null) losePanel.SetActive(true);
+    }
+
+
     IEnumerator SetupTheDeck()
     {
         yield return new WaitForSeconds(1f);
@@ -77,11 +107,29 @@ public class GameManager : MonoBehaviour
     {
         foreach (Transform child in deckSlot) Destroy(child.gameObject);
 
-        for (int i = 0; i < count; i++)
+        // dont draw the same card in the same deck again
+        List<CardScriptableObject> drawnCards = new List<CardScriptableObject>();
+
+        int attempts = 0;
+
+        while (drawnCards.Count < count)
+        {
+            attempts++;
+            CardScriptableObject candidate = GetHighChanceCard(playerDeck);
+
+            if (!drawnCards.Contains(candidate))
+            {
+                drawnCards.Add(candidate);
+            }
+
+            if (attempts > 100) break;
+
+        }
+
+        foreach (CardScriptableObject cardData in drawnCards)
         {
             GameObject newCardObject = Instantiate(cardPrefab, deckSlot);
-            CardScriptableObject randomCardData = GetHighChanceCard(playerDeck);
-            newCardObject.GetComponent<ShowCard>().CreateTheCard(randomCardData);
+            newCardObject.GetComponent<ShowCard>().CreateTheCard(cardData, false);
         }
     }
 
@@ -117,7 +165,15 @@ public class GameManager : MonoBehaviour
         state = GameState.Busy;
         Destroy(visualCard.gameObject);
 
-        if (data.damageAmount > 0) enemy.TakeDamage(data.damageAmount);
+        int finalDamage = data.damageAmount;
+
+        if (finalDamage > 0 && player.isInIceMode)
+        {
+            finalDamage += 2;
+        }
+
+        // apply math
+        if (data.damageAmount > 0) enemy.TakeDamage(finalDamage);
         if (data.healAmount > 0) player.Heal(data.healAmount);
 
         yield return new WaitForSeconds(1f);
@@ -125,7 +181,7 @@ public class GameManager : MonoBehaviour
         if (enemy.currentHealth <= 0)
         {
             state = GameState.Won;
-            Win();
+            TriggerWin();
         }
         else
         {
@@ -136,6 +192,8 @@ public class GameManager : MonoBehaviour
     IEnumerator EnemyTurn()
     {
         state = GameState.EnemyTurn;
+        // hide player hand on enemy turn
+        if (deckSlot != null) deckSlot.gameObject.SetActive(false);
         yield return new WaitForSeconds(1f);
 
         if (enemyDeck.Count > 0)
@@ -145,9 +203,9 @@ public class GameManager : MonoBehaviour
 
             GameObject playedCard = Instantiate(cardPrefab, enemyCardSpawnPoint);
             Destroy(playedCard.GetComponent<Button>());
-            playedCard.GetComponent<ShowCard>().CreateTheCard(enemyMove);
+            playedCard.GetComponent<ShowCard>().CreateTheCard(enemyMove, true);
 
-            yield return new WaitForSeconds(2f);
+            yield return new WaitForSeconds(2.8f);
 
             if (enemyMove.damageAmount > 0) player.TakeDamage(enemyMove.damageAmount);
             if (enemyMove.healAmount > 0) enemy.Heal(enemyMove.healAmount);
@@ -155,10 +213,12 @@ public class GameManager : MonoBehaviour
             Destroy(playedCard);
         }
 
+        if (deckSlot != null) deckSlot.gameObject.SetActive(true);
+
         if (player.currentHealth <= 0)
         {
             state = GameState.Lost;
-            Lose();
+            TriggerLose();
         }
         else
         {
@@ -178,7 +238,7 @@ public class GameManager : MonoBehaviour
         if (currentMonth > 12)
         {
             state = GameState.Won;
-            Win();
+            TriggerWin();
             return;
         }
 
@@ -187,21 +247,19 @@ public class GameManager : MonoBehaviour
 
     void UpdateTimeUI()
     {
-        // 1. Ay görselini güncelle
+        /* ay kısmı şimdilik yok
         if (monthDisplayImage != null && monthSprites.Length >= 12)
         {
             monthDisplayImage.sprite = monthSprites[currentMonth - 1];
         }
-
+        */
         int seasonIndex = (currentMonth - 1) / 3;
 
-        // 2. Arka planı değiştir (YENİ KISIM)
         if (backgroundDisplay != null && seasonBackgrounds.Length > seasonIndex)
         {
             backgroundDisplay.sprite = seasonBackgrounds[seasonIndex];
         }
 
-        // 3. Mevsim yazısını güncelle
         if (seasonInfoText != null)
         {
             string seasonName = "";
@@ -219,13 +277,4 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void Win()
-    {
-        if (winPanel != null) winPanel.SetActive(true);
-    }
-
-    private void Lose()
-    {
-        if (losePanel != null) losePanel.SetActive(true);
-    }
 }

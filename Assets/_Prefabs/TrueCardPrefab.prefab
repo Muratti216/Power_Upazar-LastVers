@@ -96,6 +96,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   hoverScale: 1.2
+  enemyBackgroundColor: {r: 0.9811321, g: 0.4026344, b: 0.4026344, a: 1}
+  playerBackgroundColor: {r: 1, g: 1, b: 1, a: 1}
   cardBackground: {fileID: 48323407336744010}
   cardArt: {fileID: 4047780256433180977}
   nameBackground: {fileID: 4430443076724077185}

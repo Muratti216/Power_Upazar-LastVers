@@ -39,8 +39,6 @@ public class CardScriptableObject : ScriptableObject
 
     private Season GetSeasonFromMonth(int month)
     {
-        // Basit oyun döngüsü için: 
-        // 1-3: Kış, 4-6: İlkbahar, 7-9: Yaz, 10-12: Sonbahar
         if (month >= 1 && month <= 3) return Season.Winter;
         if (month >= 4 && month <= 6) return Season.Spring;
         if (month >= 7 && month <= 9) return Season.Summer;

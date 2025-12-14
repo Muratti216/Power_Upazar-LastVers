@@ -3,23 +3,20 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-// 1. Karakter Tiplerini Tanımlıyoruz
+// to differentiate the effects depending on the card belongs to enemy or player
 public enum CharacterType { Snowman, Enemy }
 
 public class CharactersController : MonoBehaviour
 {
     public string characterName;
-
-    [Header("Karakter Ayarı")]
-    // 2. Inspector'dan karakterin tipini seçeceğiz
+    // to give snowman and sun different sprites ( like they have different card pools )
     public CharacterType type;
 
     public int maxHealth = 10;
     public int currentHealth = 10;
 
     [Header("Visuals")]
-    public SpriteRenderer characterRenderer;
-    // Kardan adam için 5, Enemy için 3 görsel atanacak.
+    public Image characterRenderer;
     public Sprite[] damageSprites;
 
     [Header("UI")]
@@ -27,6 +24,10 @@ public class CharactersController : MonoBehaviour
     public GameObject healthUnitPrefab;
 
     private List<Image> healthIcons = new List<Image>();
+
+    public bool isInIceMode = false;
+    public Color iceModeColor = Color.cyan;
+
 
     void Start()
     {
@@ -36,11 +37,29 @@ public class CharactersController : MonoBehaviour
         UpdateVisuals();
     }
 
+
+    public void EnterIceMode()
+    {
+        isInIceMode = true;
+        maxHealth = 15;
+        currentHealth = 11; // show the limit is surpassed but dont reach to full potential
+
+        characterRenderer.color = iceModeColor;
+
+        characterRenderer.transform.localScale = transform.localScale * 1.2f;
+
+        // create the new health bar now
+        InitializeHealthBar();
+    }
+
     private void InitializeHealthBar()
     {
-        foreach (Transform child in healthBarPanel) Destroy(child.gameObject);
+        foreach (Transform child in healthBarPanel)
+        {
+            Destroy(child.gameObject);
+        }
         healthIcons.Clear();
-
+       
         for (int i = 0; i < maxHealth; i++)
         {
             GameObject newIcon = Instantiate(healthUnitPrefab, healthBarPanel);
@@ -54,22 +73,38 @@ public class CharactersController : MonoBehaviour
         currentHealth -= amount;
         if (currentHealth <= 0) currentHealth = 0;
 
-        UpdateVisuals(); // Can değişti, görseli güncelle
+        UpdateVisuals(); 
 
         if (currentHealth <= 0) Death();
     }
 
     public void Heal(int amount)
     {
-        currentHealth += amount;
-        if (currentHealth >= maxHealth) currentHealth = maxHealth;
+        if (type == CharacterType.Snowman && !isInIceMode && (currentHealth + amount) >= 10)
+        {
+            EnterIceMode(); 
+        }
 
-        UpdateVisuals(); // Can değişti, görseli güncelle
+        currentHealth += amount;
+
+        if (currentHealth > maxHealth) currentHealth = maxHealth;
+
+        UpdateVisuals();
     }
 
     public void Death()
     {
-        Debug.Log(characterName + " oyun dışı kaldı!");
+        if (currentHealth > 0) return;
+
+        if (type == CharacterType.Snowman)
+        {
+            GameManager.Instance.TriggerLose();
+        }
+        else if (type == CharacterType.Enemy)
+        {
+            GameManager.Instance.TriggerWin();
+        }
+
     }
 
     public float GetHealthAmount()
@@ -79,20 +114,27 @@ public class CharactersController : MonoBehaviour
 
     private void UpdateVisuals()
     {
-        // --- 1. Sağlık Barı UI ---
         for (int i = 0; i < healthIcons.Count; i++)
         {
-            healthIcons[i].enabled = (i < currentHealth);
+            if (healthIcons[i] != null)
+            {
+                // instead of hiding the health icon they are now low opacity / this can be changed temporary
+                if (i < currentHealth)
+                {
+                    healthIcons[i].color = new Color(1f, 1f, 1f, 1f);
+                }
+                else
+                {
+                    healthIcons[i].color = new Color(1f, 1f, 1f, 0.2f); 
+                }
+            }
         }
 
-        // --- 2. Karakter Sprite Güncellemesi ---
         if (characterRenderer == null || damageSprites.Length == 0) return;
 
-        // Seçilen karaktere göre farklı mantık uygula:
         if (type == CharacterType.Snowman)
         {
-            // --- Kardan Adam Mantığı (5 Görsel) ---
-            if (damageSprites.Length < 5) return; // Güvenlik
+            if (damageSprites.Length < 5) return;
 
             if (currentHealth >= 9) characterRenderer.sprite = damageSprites[0];
             else if (currentHealth >= 7) characterRenderer.sprite = damageSprites[1];
@@ -102,21 +144,17 @@ public class CharactersController : MonoBehaviour
         }
         else if (type == CharacterType.Enemy)
         {
-            // --- Enemy (Büyücü) Mantığı (3 Görsel) ---
-            // İstek: 10-6 arası b2, 5-3 arası b1, 2-1 arası ba
-            if (damageSprites.Length < 3) return; // Güvenlik
+            if (damageSprites.Length < 3) return;
 
-            // Can 6 ve üzeri (10, 9, 8, 7, 6) -> b2 (Dizideki 0. eleman)
+
             if (currentHealth >= 6)
             {
                 characterRenderer.sprite = damageSprites[0];
             }
-            // Can 3 ve üzeri (5, 4, 3) -> b1 (Dizideki 1. eleman)
             else if (currentHealth >= 3)
             {
                 characterRenderer.sprite = damageSprites[1];
             }
-            // Can 1 ve üzeri (2, 1) -> ba (Dizideki 2. eleman)
             else if (currentHealth >= 1)
             {
                 characterRenderer.sprite = damageSprites[2];

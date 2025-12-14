@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4d5bdef5eae21d148a38ea3f5aed3134, type: 3}
-  m_Name: The neighborhood grump
+  m_Name: Old Neighbour
   m_EditorClassIdentifier: 
-  cardName: The neighborhood grump
+  cardName: Old Neighbour
   cardDescription: 
   cardPicture: {fileID: -3578374291092313482, guid: 2f0bdf20be1aa264a8f85cc012e05279, type: 3}
   damageAmount: 3
   healAmount: 0
-  baseChance: 0
+  baseChance: 10
   preferredSeason: 0
