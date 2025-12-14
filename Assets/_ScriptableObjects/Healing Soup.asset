@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d5bdef5eae21d148a38ea3f5aed3134, type: 3}
+  m_Name: Healing Soup
+  m_EditorClassIdentifier: 
+  cardName: Healing Soup
+  cardDescription: 
+  cardPicture: {fileID: 1300915490701998709, guid: f89ea3c61a2ab5c468b4d26c3ce78a1f, type: 3}
+  damageAmount: 0
+  healAmount: 3
+  baseChance: 0
+  preferredSeason: 0
